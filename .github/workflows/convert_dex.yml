@@ -1,0 +1,37 @@
+name: Convert Dex
+
+on:
+  workflow_dispatch:
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Install Build Tools 27.0.3
+        run: |
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;27.0.3"
+
+      - name: Convert classes.jar to dex
+        run: |
+          if [ -f classes.jar ]; then
+            $ANDROID_HOME/build-tools/27.0.3/dx --dex --output=classes.dex classes.jar
+          else
+            echo "classes.jar not found!"
+            exit 1
+          fi
+
+      - name: Upload classes.dex
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: classes-dex
+          path: classes.dex
